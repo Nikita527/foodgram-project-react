@@ -163,6 +163,7 @@ class FavoriteShoppingCart(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
+        related_name='favorites_carts'
     )
     recipe = models.ForeignKey(
         Recipe,
