@@ -168,7 +168,6 @@ class FavoriteShoppingCart(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
-        related_name='recipe'
     )
 
     class Meta:
