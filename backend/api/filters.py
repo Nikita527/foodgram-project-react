@@ -46,11 +46,11 @@ class RecipeFilter(filters.FilterSet):
     author = filters.ModelChoiceFilter(
         queryset=User.objects.all()
     )
-    in_carts = filters.BooleanFilter(
+    shopping_list = filters.BooleanFilter(
         widget=filters.widgets.BooleanWidget(),
         label='В корзине'
     )
-    in_fovorites = filters.BooleanFilter(
+    in_favorites = filters.BooleanFilter(
         widget=filters.widgets.BooleanWidget(),
         label='В избранных'
     )
