@@ -5,23 +5,24 @@ from django.db import models
 
 class User(AbstractUser):
     """Модель для создания пользователя foodgram."""
+
     email = models.EmailField(
         'Адрес электронной почты',
-        max_length=settings.LENGTH_OF_FIELDS_USER_1,
+        max_length=settings.LENGTH_OF_FIELDS_SHORT,
         unique=True,
     )
     username = models.CharField(
         'Никнейм',
-        max_length=settings.LENGTH_OF_FIELDS_USER_2,
+        max_length=settings.LENGTH_OF_FIELDS_LONG,
         unique=True,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=settings.LENGTH_OF_FIELDS_USER_1,
+        max_length=settings.LENGTH_OF_FIELDS_SHORT,
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=settings.LENGTH_OF_FIELDS_USER_1,
+        max_length=settings.LENGTH_OF_FIELDS_SHORT,
     )
     password = models.CharField(
         'Пароль',
@@ -42,7 +43,8 @@ class User(AbstractUser):
 
 
 class Follow(models.Model):
-    """ Модель подписки на автора. """
+    """Модель подписки на автора."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

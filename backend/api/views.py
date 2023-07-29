@@ -11,19 +11,20 @@ from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                             Prescription, Tag)
+                             Recipe, Tag)
 from users.models import Follow, User
 
-from .filters import IngredientFilter, PrescriptionFilter
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrAdminOrReadOnly
-from .serializers import (CreatePrescriptionSerializer, FavoriteSerializer,
-                          IngredientSerializer, PrescriptionReadSerializer,
+from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
+                          IngredientSerializer, RecipeReadSerializer,
                           ShoppingCartSerializer, SubscribeListSerializer,
                           TagSerializer, UserSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Вывод ингредиетов."""
+
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -34,23 +35,25 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TagViewSet(viewsets.ModelViewSet):
     """Вывод тегов."""
+
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = None
 
 
-class PrescriptionViewSet(viewsets.ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet):
     """Создание рецептов."""
-    serializer_class = CreatePrescriptionSerializer
+
+    serializer_class = CreateRecipeSerializer
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = PrescriptionFilter
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
-            return PrescriptionReadSerializer
-        return CreatePrescriptionSerializer
+            return RecipeReadSerializer
+        return CreateRecipeSerializer
 
     @staticmethod
     def send_message(ingredients):
@@ -69,7 +72,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
         ingredients = AmountIngredient.objects.filter(
-            prescription__shopping_list__user=request.user
+            recipe__shopping_list__user=request.user
         ).order_by('ingredient__name').values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
@@ -82,10 +85,10 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         context = {'request': request}
-        prescription = get_object_or_404(Prescription, id=pk)
+        recipe = get_object_or_404(Recipe, id=pk)
         data = {
             'user': request.user.id,
-            'prescription': prescription.id
+            'recipe': recipe.id
         }
         serializer = ShoppingCartSerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
@@ -97,7 +100,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         get_object_or_404(
             Carts,
             user=request.user.id,
-            prescription=get_object_or_404(Prescription, id=pk)
+            recipe=get_object_or_404(Recipe, id=pk)
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -108,10 +111,10 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         context = {'request': request}
-        prescription = get_object_or_404(Prescription, id=pk)
+        recipe = get_object_or_404(Recipe, id=pk)
         data = {
             'user': request.user.id,
-            'prescription': prescription.id
+            'recipe': recipe.id
         }
         serializer = FavoriteSerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
@@ -123,13 +126,14 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         get_object_or_404(
             Favorites,
             user=request.user.id,
-            prescription=get_object_or_404(Prescription, id=pk)
+            recipe=get_object_or_404(Recipe, id=pk)
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserViewSet(UserViewSet):
     """Класс отображения данных пользователя."""
+
     serializer_class = UserSerializer
     queryset = User.objects.all()
 

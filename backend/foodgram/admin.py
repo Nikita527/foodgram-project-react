@@ -1,21 +1,23 @@
 from django.contrib import admin
 from django.contrib.admin import register
 
-from .models import (AmountIngredient, Carts, Favorites, Ingredient,
-                     Prescription, Tag)
+from .models import AmountIngredient, Carts, Favorites, Ingredient, Recipe, Tag
 
 EMTY_MSG = '-пусто-'
 
 
 class IngridientInLine(admin.TabularInline):
+    """Класс для правильного отображения количества ингредиетов."""
+
     model = AmountIngredient
     extra = 3
     min_num = 1
 
 
-@register(Prescription)
-class PrescriptionAdmin(admin.ModelAdmin):
+@register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
     """Класс рецептов для админ панели."""
+
     list_display = (
         'author',
         'name',
@@ -37,6 +39,14 @@ class PrescriptionAdmin(admin.ModelAdmin):
     inlines = (IngridientInLine,)
     empty_value_display = EMTY_MSG
 
+    def get_queryset(self, request):
+        qs = (
+            Recipe.objects.select_related('author').
+            prefetch_related('tags__tag').
+            prefetch_related('ingredients__ingredient')
+        )
+        return qs
+
     def get_favorites(self, obj):
         return obj.in_favorites.count()
     get_favorites.short_description = 'Избранное'
@@ -52,6 +62,7 @@ class PrescriptionAdmin(admin.ModelAdmin):
 @register(Ingredient)
 class IngridientAdmin(admin.ModelAdmin):
     """Класс ингридиетов для админ панели."""
+
     list_display = (
         'name',
         'measurement_unit',
@@ -64,6 +75,7 @@ class IngridientAdmin(admin.ModelAdmin):
 @register(Tag)
 class TagAdmin(admin.ModelAdmin):
     """Класс тэгов для админ панели."""
+
     list_display = (
         'name',
         'color',
@@ -77,28 +89,30 @@ class TagAdmin(admin.ModelAdmin):
 @register(Favorites)
 class FavoritesAdmin(admin.ModelAdmin):
     """Класс избранных рецептов для админ панели."""
+
     list_display = (
         'user',
-        'prescription',
+        'recipe',
     )
     search_fields = (
         'user',
-        'prescription',
+        'recipe',
     )
-    list_filter = ('user', 'prescription',)
+    list_filter = ('user', 'recipe',)
     empty_value_display = EMTY_MSG
 
 
 @register(Carts)
 class CartAdmin(admin.ModelAdmin):
     """Класс корзины покупок для админ панели."""
+
     list_display = (
         'user',
-        'prescription',
+        'recipe',
     )
     search_fields = (
         'user',
-        'prescription',
+        'recipe',
     )
-    list_filter = ('user', 'prescription',)
+    list_filter = ('user', 'recipe',)
     empty_value_display = EMTY_MSG

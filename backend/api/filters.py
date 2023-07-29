@@ -2,11 +2,13 @@ import django_filters as filters
 
 from django.core.exceptions import ValidationError
 
-from foodgram.models import Ingredient, Prescription
+from foodgram.models import Ingredient, Recipe
 from users.models import User
 
 
 class TagsMultipleChoiceField(filters.fields.ModelMultipleChoiceField):
+    """Фильтер для выбора тегов."""
+
     def validate(self, value):
         if self.required and not value:
             raise ValidationError(
@@ -23,10 +25,14 @@ class TagsMultipleChoiceField(filters.fields.ModelMultipleChoiceField):
 
 
 class TagsFilter(filters.AllValuesMultipleFilter):
+    """Фильтр тэгов."""
+
     field_class = TagsMultipleChoiceField
 
 
 class IngredientFilter(filters.FilterSet):
+    """Фильтр для ингредиентов."""
+
     name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:
@@ -34,7 +40,9 @@ class IngredientFilter(filters.FilterSet):
         fields = ('name',)
 
 
-class PrescriptionFilter(filters.FilterSet):
+class RecipeFilter(filters.FilterSet):
+    """Фильтр рецептов."""
+
     author = filters.ModelChoiceFilter(
         queryset=User.objects.all()
     )
@@ -52,5 +60,5 @@ class PrescriptionFilter(filters.FilterSet):
     )
 
     class Meta:
-        model = Prescription
+        model = Recipe
         fields = ['shopping_list', 'in_favorites', 'author', 'tags']

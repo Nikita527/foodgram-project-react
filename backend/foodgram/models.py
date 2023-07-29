@@ -9,9 +9,10 @@ User = get_user_model()
 
 class Tag(models.Model):
     """Класс тэгов для рецептов."""
+
     name = models.CharField(
         'Тэг',
-        max_length=settings.LENGTH_OF_FIELDS_PRESCRIPTION,
+        max_length=settings.LENGTH_OF_FIELDS_RECIPE,
         unique=True
     )
     color = models.CharField(
@@ -28,7 +29,7 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         'Адрес Тэга',
-        max_length=settings.LENGTH_OF_FIELDS_PRESCRIPTION,
+        max_length=settings.LENGTH_OF_FIELDS_RECIPE,
         unique=True,
         db_index=False
     )
@@ -44,14 +45,15 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     """Класс ингредиетов."""
+
     name = models.CharField(
         'Ингридиент',
-        max_length=settings.LENGTH_OF_FIELDS_PRESCRIPTION,
+        max_length=settings.LENGTH_OF_FIELDS_RECIPE,
         db_index=True
     )
     measurement_unit = models.CharField(
         'Единицы измерения',
-        max_length=settings.LENGTH_OF_FIELDS_PRESCRIPTION,
+        max_length=settings.LENGTH_OF_FIELDS_RECIPE,
     )
 
     class Meta:
@@ -69,24 +71,25 @@ class Ingredient(models.Model):
         return f'{self.name}, {self.measurement_unit}'
 
 
-class Prescription(models.Model):
+class Recipe(models.Model):
     """Класс рецепты."""
+
     name = models.CharField(
         'Название',
-        max_length=settings.LENGTH_OF_FIELDS_PRESCRIPTION,
+        max_length=settings.LENGTH_OF_FIELDS_RECIPE,
         unique=True
     )
     author = models.ForeignKey(
         User,
         verbose_name='Автор рецепта',
         on_delete=models.SET_NULL,
-        related_name='prescriptions',
+        related_name='recipes',
         null=True,
     )
     tags = models.ManyToManyField(
         Tag,
         verbose_name='Тэг',
-        related_name='prescriptions',
+        related_name='recipes',
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -103,7 +106,7 @@ class Prescription(models.Model):
         upload_to='foodgram/media'
     )
     description = models.TextField('Описание')
-    cooking_time = models.IntegerField(
+    cooking_time = models.SmallIntegerField(
         'Время приготовления',
         validators=[
             MinValueValidator(
@@ -126,16 +129,17 @@ class Prescription(models.Model):
 
 class AmountIngredient(models.Model):
     """Колличество ингредиентов используемых в блюде."""
+
     ingredient = models.ForeignKey(
         Ingredient,
         verbose_name='Ингредиент',
         on_delete=models.CASCADE,
         related_name='ingredient'
     )
-    prescription = models.ForeignKey(
-        Prescription,
+    recipe = models.ForeignKey(
+        Recipe,
         verbose_name='В каких рецептах',
-        related_name='ingredienttoprescription',
+        related_name='ingredient_to_recipes',
         on_delete=models.CASCADE,
     )
     amount = models.PositiveSmallIntegerField(
@@ -146,37 +150,39 @@ class AmountIngredient(models.Model):
     class Meta:
         verbose_name = 'Ингридиент'
         verbose_name_plural = 'Количество ингридиентов'
-        ordering = ('prescription',)
+        ordering = ('recipe',)
 
     def __str__(self) -> str:
         return f'{self.amount} {self.ingredient}'
 
 
 class FavoriteShoppingCart(models.Model):
-    """ Связывающая модель списка покупок и избранного. """
+    """Связывающая модель списка покупок и избранного."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
-
+        related_name='user',
     )
-    prescription = models.ForeignKey(
-        Prescription,
+    recipe = models.ForeignKey(
+        Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
+        related_name='recipe'
     )
 
     class Meta:
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=('user', 'prescription'),
+                fields=('user', 'recipe'),
                 name='%(app_label)s_%(class)s_unique'
             )
         ]
 
     def __str__(self) -> str:
-        return f'{self.user} :: {self.prescription}'
+        return f'{self.user} :: {self.recipe}'
 
 
 class Favorites(FavoriteShoppingCart):

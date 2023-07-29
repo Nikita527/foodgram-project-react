@@ -7,12 +7,13 @@ from rest_framework.fields import SerializerMethodField
 from django.shortcuts import get_object_or_404
 
 from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                             Prescription, Tag)
+                             Recipe, Tag)
 from users.models import User
 
 
 class UserSerializer(UserSerializer):
     """Сериализатор для пользователей foodgram."""
+
     is_subscribed = SerializerMethodField(read_only=True)
 
     class Meta:
@@ -66,6 +67,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class AmountIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор количества ингридиентов в блюде."""
+
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
     )
@@ -79,26 +81,27 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount',)
 
 
-class PrescriptionReadSerializer(serializers.ModelField):
+class RecipeReadSerializer(serializers.ModelField):
     """Сериализатор для просмотра рецептов."""
+
     tags = TagSerializer(read_only=False, many=True)
     author = UserSerializer(read_only=True, many=False)
     ingredients = AmountIngredientSerializer(
         many=True,
-        source='ingredienttoprescription'
+        source='ingredient_to_recipe'
     )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField(max_length=None)
 
     class Meta:
-        model = Prescription
+        model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                   'is_favorited', 'is_in_shopping_cart',
                   'name', 'image', 'description', 'cooking_time',)
 
     def get_ingredients(self, obj):
-        ingredients = AmountIngredient.objects.filter(prescription=obj)
+        ingredients = AmountIngredient.objects.filter(recipe=obj)
         return AmountIngredientSerializer(ingredients, many=True).data
 
     def get_is_favorited(self, obj):
@@ -114,8 +117,9 @@ class PrescriptionReadSerializer(serializers.ModelField):
         return obj.shopping_list.filter(user=request.user).exists()
 
 
-class CreatePrescriptionSerializer(serializers.ModelSerializer):
+class CreateRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления новых рецептов."""
+
     ingredients = AmountIngredientSerializer(
         many=True,
     )
@@ -129,17 +133,16 @@ class CreatePrescriptionSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField()
 
     class Meta:
-        model = Prescription
+        model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'description', 'cooking_time',)
 
-    def validate_tags(self, tags):
-        for tag in tags:
-            if not Tag.objects.filter(id=tag.id).exists():
-                raise serializers.ValidationError(
-                    'Указанного тэга не существует'
-                )
-        return tags
+    def validate_tags(self, data):
+        tag = data['tags']
+        if not tag:
+            raise serializers.ValidationError(
+                'Нужно добавить хотя бы один тэг'
+            )
 
     def validate_cooking_time(self, cooking_time):
         if cooking_time < 1:
@@ -167,14 +170,14 @@ class CreatePrescriptionSerializer(serializers.ModelSerializer):
             return ingredients
 
     @staticmethod
-    def create_ingredients(prescription, ingredients):
+    def create_ingredients(recipe, ingredients):
         ingredients_list = []
         for ingredient_data in ingredients:
             ingredients_list.append(
                 AmountIngredient(
                     ingredient=ingredient_data.pop('id'),
                     amount=ingredient_data.pop('amount'),
-                    prescription=prescription,
+                    recipe=recipe,
                 )
             )
         AmountIngredient.objects.bulk_create(ingredients_list)
@@ -183,32 +186,32 @@ class CreatePrescriptionSerializer(serializers.ModelSerializer):
         request = self.context.get('request', None)
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        prescription = Prescription.objects.create(
+        recipe = Recipe.objects.create(
             author=request.user, **validated_data
         )
-        prescription.tags.set(tags)
-        self.create_ingredients(prescription, ingredients)
-        return prescription
+        recipe.tags.set(tags)
+        self.create_ingredients(recipe, ingredients)
+        return recipe
 
     def update(self, instance, validated_data):
         instance.tags.clear()
-        AmountIngredient.objects.filter(prescription=instance).delete()
+        AmountIngredient.objects.filter(recipe=instance).delete()
         instance.tags.set(validated_data.pop('tags'))
         ingredients = validated_data.pop('ingredients')
         self.create_ingredients(instance, ingredients)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        return PrescriptionReadSerializer(instance, context={
+        return RecipeReadSerializer(instance, context={
             'request': self.context.get('request')
         }).data
 
 
-class PrescriptionShortSerializer(serializers.ModelSerializer):
+class RecipeShortSerializer(serializers.ModelSerializer):
     """Сериализатор для избранных рецептов и покупок."""
 
     class Meta:
-        model = Prescription
+        model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
@@ -217,19 +220,19 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Favorites
-        fields = ('user', 'prescription',)
+        fields = ('user', 'recipe',)
 
     def validate(self, data):
         user = data['user']
-        if user.in_favorites.filter(prescription=data['prescription']).exists:
+        if user.in_favorites.filter(recipe=data['recipe']).exists:
             raise serializers.ValidationError(
                 'Рецепт уже в избранном'
             )
         return data
 
     def to_representation(self, instance):
-        return PrescriptionShortSerializer(
-            instance.prescription,
+        return RecipeShortSerializer(
+            instance.recipe,
             context={'request': self.context.get('request')}
         ).data
 
@@ -239,12 +242,12 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Carts
-        fields = ('user', 'prescription',)
+        fields = ('user', 'recipe',)
 
     def validate(self, data):
         user = data['user']
         if user.shopping_list.filter(
-            prescription=data('prescription').exists()
+            recipe=data('recipe').exists()
         ):
             raise serializers.ValidationError(
                 'Рецепт уже есть в корзине'
@@ -252,20 +255,21 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return PrescriptionShortSerializer(
-            instance.prescription,
+        return RecipeShortSerializer(
+            instance.recipe,
             context={'request': self.context.get('request')}
         ).data
 
 
 class SubscribeListSerializer(UserSerializer):
-    """ Сериализатор для получения подписок """
-    prescription_count = SerializerMethodField()
-    prescription = SerializerMethodField()
+    """Сериализатор для получения подписок."""
+
+    recipe_count = SerializerMethodField()
+    recipe = SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         fields = (
-            UserSerializer.Meta.fields + ('prescription_count', 'prescription')
+            UserSerializer.Meta.fields + ('recipe_count', 'recipe')
         )
         read_only_fields = ('email', 'username', 'first_name', 'last_name')
 
@@ -286,16 +290,16 @@ class SubscribeListSerializer(UserSerializer):
             )
         return data
 
-    def get_prescription_count(self, obj):
-        return obj.prescription.count()
+    def get_recipe_count(self, obj):
+        return Recipe.objects.annotate(author=obj).count()
 
-    def get_prescription(self, obj):
+    def get_recipe(self, obj):
         request = self.context.get('request')
-        limit = request.GET.get('prescription_limit')
-        prescription = obj.recipes.all()
+        limit = request.GET.get('recipe_limit')
+        recipe = obj.recipes.all()
         if limit:
-            prescription = prescription[: int(limit)]
-        serializer = PrescriptionShortSerializer(
-            prescription, many=True, read_only=True
+            recipe = recipe[: int(limit)]
+        serializer = RecipeShortSerializer(
+            recipe, many=True, read_only=True
         )
         return serializer.data
