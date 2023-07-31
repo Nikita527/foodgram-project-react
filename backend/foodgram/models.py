@@ -106,7 +106,7 @@ class Recipe(models.Model):
         upload_to='foodgram/media'
     )
     description = models.TextField('Описание')
-    cooking_time = models.SmallIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
         validators=[
             MinValueValidator(

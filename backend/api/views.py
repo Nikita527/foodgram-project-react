@@ -151,7 +151,7 @@ class UserViewSet(UserViewSet):
                 author, data=request.data, context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=user, author=author)
+            Follow.objects.annotate(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':

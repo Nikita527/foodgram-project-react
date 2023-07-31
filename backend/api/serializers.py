@@ -290,9 +290,6 @@ class SubscribeListSerializer(UserSerializer):
             )
         return data
 
-    def get_recipe_count(self, obj):
-        return Recipe.objects.annotate(author=obj).count()
-
     def get_recipe(self, obj):
         request = self.context.get('request')
         limit = request.GET.get('recipe_limit')
