@@ -40,12 +40,11 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = EMTY_MSG
 
     def get_queryset(self, request):
-        request = (
-            Recipe.objects.select_related('author').
-            prefetch_related('tags__tag').
-            prefetch_related('ingredients__ingredient')
-        )
-        return super().get_queryset(request)
+        qs = super().get_queryset(request)
+        qs.select_related('author')
+        qs.prefetch_related('tags__tag')
+        qs.prefetch_related('ingredients__ingredient')
+        return qs
 
     def get_favorites(self, obj):
         return obj.in_favorites.count()
@@ -102,10 +101,9 @@ class FavoritesAdmin(admin.ModelAdmin):
     empty_value_display = EMTY_MSG
 
     def get_queryset(self, request):
-        request = (
-            Recipe.objects.select_related('user')
-        )
-        return super().get_queryset(request)
+        qs = super().get_queryset(request)
+        qs.select_related('user').select_related('recipe')
+        return qs
 
 
 @register(Carts)
@@ -122,3 +120,10 @@ class CartAdmin(admin.ModelAdmin):
     )
     list_filter = ('user', 'recipe',)
     empty_value_display = EMTY_MSG
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs.select_related('author')
+        qs.prefetch_related('tags__tag')
+        qs.prefetch_related('ingredients__ingredient')
+        return qs

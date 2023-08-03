@@ -264,7 +264,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 class SubscribeListSerializer(UserSerializer):
     """Сериализатор для получения подписок."""
 
-    recipe_count = SerializerMethodField()
+    recipe_count = serializers.IntegerField()
     recipe = SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
