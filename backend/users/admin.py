@@ -40,5 +40,6 @@ class FollowAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
     def get_queryset(self, request):
-        qs = Follow.objects.select_related('user')
+        qs = super().get_queryset(request)
+        qs.select_related('user')
         return qs

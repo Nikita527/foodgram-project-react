@@ -41,9 +41,10 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs.select_related('author')
-        qs.prefetch_related('tags__tag')
-        qs.prefetch_related('ingredients__ingredient')
+        qs = (
+            qs.select_related('author')
+            .prefetch_related('tags__tag', 'ingredients__ingredient')
+        )
         return qs
 
     def get_favorites(self, obj):
@@ -102,7 +103,7 @@ class FavoritesAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs.select_related('user').select_related('recipe')
+        qs.select_related('user', 'recipe')
         return qs
 
 
@@ -123,7 +124,8 @@ class CartAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs.select_related('author')
-        qs.prefetch_related('tags__tag')
-        qs.prefetch_related('ingredients__ingredient')
+        qs = (
+            qs.select_related('author')
+            .prefetch_related('tags__tag', 'ingredients__ingredient')
+        )
         return qs
