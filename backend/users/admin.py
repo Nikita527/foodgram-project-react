@@ -41,5 +41,5 @@ class FollowAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs.select_related('user')
+        qs = qs.select_related('user', 'author')
         return qs
