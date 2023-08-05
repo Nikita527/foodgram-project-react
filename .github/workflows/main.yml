@@ -21,26 +21,6 @@ jobs:
         source: "infra/docker-compose.yml"
         target: "foodgram"
 
-    - name: Copy env file
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        key: ${{ secrets.SSH_KEY }}
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: ".env"
-        target: foodgram/infra
-
-    - name: Copy docs file
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        key: ${{ secrets.SSH_KEY }}
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docs/."
-        target: "foodgram/docs"
-
   build_and_push_backend_to_docker_hub:
     name: Building backend image and push it to DockerHub
     runs-on: ubuntu-latest
@@ -95,6 +75,16 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd foodgram/infra
+          rm -f .env
+          touch .env
+          echo DEBUG=${{ secrets.DEBUG }} >> .env
+          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
+          echo ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }} >> .env
+          echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+          echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+          echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+
           sudo docker compose stop
           sudo docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs sudo docker rm
           sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
