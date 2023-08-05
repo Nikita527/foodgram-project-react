@@ -10,15 +10,13 @@ jobs:
     name: Copy infra and docs
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Create projects directory
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: ls -a
         host: ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        privateKey: ${{ secrets.SSH_KEY }}
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        username: ${{ secrets.USERNAME }}
+        privateKey: ${{ secrets.PRIVATE_KEY }}
         command: mkdir -p foodgram && mkdir -p foodgram/docs
 
     - name: Copy infra files
