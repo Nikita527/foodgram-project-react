@@ -85,6 +85,7 @@ jobs:
           echo DB_HOST=${{ secrets.DB_HOST }} >> .env
           echo DB_PORT=${{ secrets.DB_PORT }} >> .env
 
+          cd foodgram/infra
           sudo docker compose stop
           sudo docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs sudo docker rm
           sudo docker rmi ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
