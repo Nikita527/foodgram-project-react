@@ -84,7 +84,7 @@ jobs:
         privateKey: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         command: |
-          cd foodgram
+          cd foodgram/infra
           rm -f .env
           touch .env
           echo DEBUG=${{ secrets.DEBUG }} >> .env
