@@ -11,33 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Create projects directory
-      uses: garygrossgarten/github-action-ssh@release
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        privateKey: ${{ secrets.PRIVATE_KEY }}
-        command: mkdir -p foodgram && mkdir -p foodgram/docs
-
     - name: Copy infra files
-      uses: garygrossgarten/github-action-ssh@release
+      uses: appleboy/scp-action@master
       with:
-        local: ./infra/
-        remote: /${{ secrets.USER }}/foodgram/
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
-        privateKey: ${{ secrets.SSH_KEY }}
+        key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "infra/docker-compose.yml"
+        target: "foodgram"
 
     - name: Copy docs file
-      uses: garygrossgarten/github-action-ssh@release
+      uses: appleboy/scp-action@master
       with:
-        local: ./docs/
-        remote: /${{ secrets.USER }}/foodgram/docs/
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
-        privateKey: ${{ secrets.SSH_KEY }}
+        key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "docs/."
+        target: "foodgram/docs"
 
   build_and_push_backend_to_docker_hub:
     name: Building backend image and push it to DockerHub
