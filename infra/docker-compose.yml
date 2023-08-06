@@ -13,8 +13,8 @@ services:
     image: nikitasalikov/foodgram_backend:latest
     restart: on-failure
     volumes:
-      - static_foodgram:/backend_static
-      - media_foodgram:/app/media
+      - static_foodgram:/app/static/
+      - media_foodgram:/app/media/
     depends_on:
       - foodgram_db
     env_file:
