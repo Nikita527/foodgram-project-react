@@ -31,7 +31,7 @@ services:
     image: nginx:latest
     restart: always
     ports:
-      - "8000:80"
+      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/infra/default.conf
       - ../frontend/build:/usr/share/nginx/html/
