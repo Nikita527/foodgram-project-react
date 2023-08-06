@@ -20,6 +20,15 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "infra/docker-compose.yml"
         target: "foodgram"
+    - name: Copy nginx files
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "infra/nginx.conf"
+        target: "foodgram/infra/nginx.conf/"
 
   build_and_push_backend_to_docker_hub:
     name: Building backend image and push it to DockerHub

@@ -43,7 +43,6 @@ services:
       - media_foodgram:/var/html/media
     depends_on:
       - backend
-      - frontend
 
 volumes:
   pg_data:
