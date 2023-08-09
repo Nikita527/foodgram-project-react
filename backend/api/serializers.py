@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
                              Recipe, Tag)
-from users.models import User
+from users.models import User, Follow
 
 
 class UserSerializer(UserSerializer):
@@ -28,10 +28,10 @@ class UserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if self.context.get('request').user.is_anonymous:
+        user = self.context.get('request').user
+        if user.is_anonymous:
             return False
-        return obj.subscriptions.filter(user=request.user).exists()
+        return Follow.objects.filter(user=user, author=obj).exists()
 
 
 class UserCreateSerializer(UserCreateSerializer):
