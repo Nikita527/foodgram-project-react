@@ -4,11 +4,54 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 
+from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
 from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
                              Recipe, Tag)
 from users.models import User
+
+
+class TokenSerializer(serializers.Serializer):
+    """Получение токена."""
+
+    email = serializers.CharField(
+        lable='Почта',
+        write_only=True
+    )
+    password = serializers.CharField(
+        lable='Пароль',
+        style={'input_type': 'password'},
+        trim_witespase=False,
+        write_only=True
+    )
+    token = serializers.CharField(
+        lable='Токен',
+        read_only=True
+    )
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        if email and password:
+            user = authenticate(
+                request=self.context.get('request'),
+                email=email,
+                password=password
+            )
+            if not user:
+                raise serializers.ValidationError(
+                    'Не удается войти в систему с предоставленными данным',
+                    code='authorization'
+                )
+        else:
+            msg = 'Необходимо указать почту и пароль.'
+            raise serializers.ValidationError(
+                msg,
+                code='authorization'
+            )
+        attrs['user'] = user
+        return attrs
 
 
 class UserSerializer(UserSerializer):

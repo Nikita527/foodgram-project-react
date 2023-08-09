@@ -124,5 +124,5 @@ class CartAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.select_related('author', 'recipe')
+        qs = qs.select_related('user', 'recipe')
         return qs

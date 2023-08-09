@@ -1,8 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated,
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
@@ -19,7 +21,7 @@ from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadSerializer,
                           ShoppingCartSerializer, SubscribeListSerializer,
-                          TagSerializer, UserSerializer)
+                          TagSerializer, TokenSerializer, UserSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -175,3 +177,20 @@ class UserViewSet(UserViewSet):
             pages, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
+
+
+class AuthToken(ObtainAuthToken):
+    """Авторизация пользователя."""
+
+    serializer_class = TokenSerializer
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response(
+            {'auth_token': token.key},
+            status=status.HTTP_201_CREATED
+        )
