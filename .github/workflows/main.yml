@@ -47,7 +47,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "./nginx.conf"
+        source: "infra/nginx.conf"
         target: "foodgram/nginx.conf/"
 
     - name: Copy docs files
