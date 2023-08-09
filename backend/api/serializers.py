@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
                              Recipe, Tag)
-from users.models import User, Follow
+from users.models import Follow, User
 
 
 class UserSerializer(UserSerializer):
