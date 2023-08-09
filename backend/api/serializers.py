@@ -16,17 +16,17 @@ class TokenSerializer(serializers.Serializer):
     """Получение токена."""
 
     email = serializers.CharField(
-        lable='Почта',
+        label='Почта',
         write_only=True
     )
     password = serializers.CharField(
-        lable='Пароль',
+        label='Пароль',
         style={'input_type': 'password'},
-        trim_witespase=False,
+        trim_whitespace=False,
         write_only=True
     )
     token = serializers.CharField(
-        lable='Токен',
+        label='Токен',
         read_only=True
     )
 
