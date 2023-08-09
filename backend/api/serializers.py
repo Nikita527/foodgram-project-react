@@ -4,55 +4,11 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 
-import django.contrib.auth.password_validation as validators
-from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
 from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
                              Recipe, Tag)
 from users.models import User
-
-
-class TokenSerializer(serializers.Serializer):
-    """Получение токена."""
-
-    email = serializers.CharField(
-        label='Почта',
-        write_only=True
-    )
-    password = serializers.CharField(
-        label='Пароль',
-        style={'input_type': 'password'},
-        trim_whitespace=False,
-        write_only=True
-    )
-    token = serializers.CharField(
-        label='Токен',
-        read_only=True
-    )
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-        if email and password:
-            user = authenticate(
-                request=self.context.get('request'),
-                email=email,
-                password=password
-            )
-            if not user:
-                raise serializers.ValidationError(
-                    'Не удается войти в систему с предоставленными данными',
-                    code='authorization'
-                )
-        else:
-            msg = 'Необходимо указать почту и пароль.'
-            raise serializers.ValidationError(
-                msg,
-                code='authorization'
-            )
-        attrs['user'] = user
-        return attrs
 
 
 class UserSerializer(UserSerializer):
@@ -91,10 +47,6 @@ class UserCreateSerializer(UserCreateSerializer):
             'last_name',
             'password',
         )
-
-    def validate_password(self, password):
-        validators.validate_password(password)
-        return password
 
 
 class TagSerializer(serializers.ModelSerializer):
