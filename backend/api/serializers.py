@@ -4,6 +4,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 
+import django.contrib.auth.password_validation as validators
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
@@ -41,7 +42,7 @@ class TokenSerializer(serializers.Serializer):
             )
             if not user:
                 raise serializers.ValidationError(
-                    'Не удается войти в систему с предоставленными данным',
+                    'Не удается войти в систему с предоставленными данными',
                     code='authorization'
                 )
         else:
@@ -67,7 +68,6 @@ class UserSerializer(UserSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_active',
             'is_subscribed',
         )
 
@@ -84,12 +84,17 @@ class UserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
         fields = (
+            'id',
             'email',
             'username',
             'first_name',
             'last_name',
             'password',
         )
+
+    def validate_password(self, password):
+        validators.validate_password(password)
+        return password
 
 
 class TagSerializer(serializers.ModelSerializer):

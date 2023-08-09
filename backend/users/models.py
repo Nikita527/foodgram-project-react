@@ -24,14 +24,9 @@ class User(AbstractUser):
         'Фамилия',
         max_length=settings.LENGTH_OF_FIELDS_SHORT,
     )
-    password = models.CharField(
-        'Пароль',
-        max_length=128,
-    )
-    is_active = models.BooleanField(
-        'Активирован',
-        default=True,
-    )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
         verbose_name = 'Пользователь'

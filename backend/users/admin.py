@@ -7,7 +7,6 @@ from users.models import Follow, User
 @register(User)
 class MyUserAdmin(admin.ModelAdmin):
     list_display = (
-        'is_active',
         'username',
         'first_name',
         'last_name',
@@ -18,7 +17,6 @@ class MyUserAdmin(admin.ModelAdmin):
         'email',
     )
     list_filter = (
-        'is_active',
         'first_name',
         'email',
     )

@@ -15,7 +15,6 @@ services:
     volumes:
       - static_foodgram:/app/static/
       - media_foodgram:/app/media/
-      - redoc:/app/api/docs/
     depends_on:
       - foodgram_db
     env_file:
@@ -38,7 +37,8 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - static_foodgram:/var/html/static/
       - media_foodgram:/var/html/media/
-      - redoc:/usr/share/nginx/html/api/docs/
+      - ../docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
+      - ../docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
     depends_on:
       - backend
 
@@ -46,4 +46,3 @@ volumes:
   pg_data:
   static_foodgram:
   media_foodgram:
-  redoc:

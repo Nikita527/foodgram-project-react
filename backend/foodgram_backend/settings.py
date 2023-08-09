@@ -130,8 +130,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6,
 }
 
-
 DJOSER = {
+    "HIDE_USERS": False,
+    "LOGIN_FIELD": 'email',
     "SERIALIZERS": {
         "user_create": "api.serializers.UserCreateSerializer",
         "user": "api.serializers.UserSerializer",
@@ -142,8 +143,6 @@ DJOSER = {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
         "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
     },
-
-    "HIDE_USERS": False,
 }
 
 
