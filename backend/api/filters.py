@@ -55,7 +55,7 @@ class RecipeFilter(filters.FilterSet):
         label='В избранных'
     )
     tags = filters.AllValuesMultipleFilter(
-        fields_name='tags__slug',
+        field_name='tags__slug',
         label='Ссылка'
     )
 
