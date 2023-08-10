@@ -33,7 +33,7 @@ class TagsFilter(filters.AllValuesMultipleFilter):
 class IngredientFilter(filters.FilterSet):
     """Фильтр для ингредиентов."""
 
-    name = filters.CharFilter(lookup_expr='istartswith')
+    name = filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
         model = Ingredient

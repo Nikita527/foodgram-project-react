@@ -15,7 +15,7 @@ from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
 from users.models import Follow, User
 
 from .filters import IngredientFilter, RecipeFilter
-from .permissions import IsAuthorOrAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadSerializer,
                           ShoppingCartSerializer, SubscribeListSerializer,
@@ -25,10 +25,11 @@ from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Вывод ингредиетов."""
 
-    serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    filter_backends = (IngredientFilter,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
     search_fields = ('^name',)
     pagination_class = None
 
@@ -38,17 +39,21 @@ class TagViewSet(viewsets.ModelViewSet):
 
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Создание рецептов."""
 
+    queryset = Recipe.objects.all()
     serializer_class = CreateRecipeSerializer
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
