@@ -1,10 +1,10 @@
-import django_filters as filters
+from django_filters.rest_framework import FilterSet, filters
 
 from foodgram.models import Ingredient, Recipe, Tag
 from users.models import User
 
 
-class IngredientFilter(filters.FilterSet):
+class IngredientFilter(FilterSet):
     """Фильтр для ингредиентов."""
 
     name = filters.CharFilter(lookup_expr='startswith')
@@ -14,7 +14,7 @@ class IngredientFilter(filters.FilterSet):
         fields = ('name',)
 
 
-class RecipeFilter(filters.FilterSet):
+class RecipeFilter(FilterSet):
     """Фильтр рецептов."""
 
     tags = filters.ModelMultipleChoiceFilter(
@@ -25,27 +25,25 @@ class RecipeFilter(filters.FilterSet):
     author = filters.ModelChoiceFilter(
         queryset=User.objects.all()
     )
-    is_in_shopping_list = filters.BooleanFilter(
-        label='В корзине',
-        method='filter_is_in_shopping_list'
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='filter_is_in_shopping_cart'
     )
-    in_favorited = filters.BooleanFilter(
-        label='В избранных',
-        method='filter_is_in_fovorited'
+    is_favorited = filters.BooleanFilter(
+        method='filter_is_favorited'
     )
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags',)
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
-    def filter_is_in_favorited(self, queryset, name, value):
+    def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
             return queryset.filter(favorited__user=user)
         return queryset
 
-    def filter_is_in_shopping_list(self, queryset, name, value):
+    def filter_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
-            return queryset.filter(shopping_list__user=user)
+            return queryset.filter(shopping_cart__user=user)
         return queryset

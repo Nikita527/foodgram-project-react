@@ -74,7 +74,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         ingredients = AmountIngredient.objects.filter(
-            recipe__shopping_list__user=request.user
+            recipe__shopping_cart__user=request.user
         ).order_by('ingredient__name').values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
@@ -99,8 +99,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk):
         if request.method == 'POST':
             return self.add_to(Carts, request.user, pk)
-        else:
+        elif request.method == 'DELETE':
             return self.delete_from(Carts, request.user, pk)
+        return None
 
     def add_to(self, model, user, pk):
         if model.objects.filter(user=user, recipe__id=pk).exists():

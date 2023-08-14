@@ -201,6 +201,6 @@ class Carts(FavoriteShoppingCart):
     """Рецепты в корзине покупок."""
 
     class Meta(FavoriteShoppingCart.Meta):
-        default_related_name = 'shopping_list'
+        default_related_name = 'shopping_cart'
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'

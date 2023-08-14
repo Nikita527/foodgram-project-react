@@ -99,14 +99,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
-    is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_list = serializers.SerializerMethodField(read_only=True)
-    image = Base64ImageField(required=False, allow_null=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+    image = serializers.CharField(source='image.url')
 
     class Meta:
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients',
-                  'is_favorited', 'is_in_shopping_list',
+                  'is_favorited', 'is_in_shopping_cart',
                   'name', 'image', 'text', 'cooking_time',)
 
     def get_ingredients(self, obj):
@@ -117,17 +117,13 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return (
-            Recipe.objects.filter(favorited__user=user, id=obj.id).exists()
-        )
+        return user.favorited.filter(recipe=obj).exists()
 
-    def get_is_in_shopping_list(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return (
-            Recipe.objects.filter(shopping_list__user=user, id=obj.id).exists()
-        )
+        return user.shopping_cart.filter(recipe=obj).exists()
 
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
@@ -164,25 +160,20 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             )
         return cooking_time
 
-    def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
-            raise ValidationError({
-                'ingredients': 'Нужен хотя бы один ингредиент!'
-            })
+    def validate_ingredients(self, ingredients):
         ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Ингридиенты не могут повторяться!'
-                })
-            if int(item['amount']) <= 0:
-                raise ValidationError({
-                    'amount': 'Количество ингредиента должно быть больше 0!'
-                })
-            ingredients_list.append(ingredient)
-        return value
+        if not ingredients:
+            raise serializers.ValidationError(
+                'Отсутствуют ингридиенты')
+        for ingredient in ingredients:
+            if ingredient['id'] in ingredients_list:
+                raise serializers.ValidationError(
+                    'Ингридиенты должны быть уникальны')
+            ingredients_list.append(ingredient['id'])
+            if int(ingredient.get('amount')) < 1:
+                raise serializers.ValidationError(
+                    'Количество ингредиента больше 0')
+        return ingredients
 
     @staticmethod
     def create_ingredients(recipe, ingredients):
@@ -224,7 +215,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 class RecipeShortSerializer(serializers.ModelSerializer):
     """Сериализатор для избранных рецептов и покупок."""
 
-    image = Base64ImageField(required=False, allow_null=True)
+    image = serializers.CharField(source='image.url')
 
     class Meta:
         model = Recipe
@@ -241,7 +232,7 @@ class SubscribeListSerializer(UserSerializer):
         fields = (
             UserSerializer.Meta.fields + ('recipes',)
         )
-        read_only_fields = ('email', 'username',)
+        read_only_fields = ('email', 'username', 'first_name', 'last_name',)
 
     def validate(self, data):
         author_id = self.context.get(

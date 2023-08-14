@@ -22,7 +22,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'author',
         'name',
         'cooking_time',
-        'get_favorites',
+        'get_favorited',
         'get_ingredients',
         'pub_date',
     )
@@ -47,9 +47,9 @@ class RecipeAdmin(admin.ModelAdmin):
         )
         return qs
 
-    def get_favorites(self, obj):
-        return obj.in_favorites.count()
-    get_favorites.short_description = 'Избранное'
+    def get_favorited(self, obj):
+        return obj.favorited.count()
+    get_favorited.short_description = 'Избранное'
 
     def get_ingredients(self, obj):
         return ', '.join([
