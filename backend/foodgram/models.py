@@ -188,11 +188,11 @@ class FavoriteShoppingCart(models.Model):
         return f'{self.user} :: {self.recipe}'
 
 
-class Favorites(FavoriteShoppingCart):
+class Favorited(FavoriteShoppingCart):
     """Класс избранных рецептов."""
 
     class Meta(FavoriteShoppingCart.Meta):
-        default_related_name = 'in_favorites'
+        default_related_name = 'favorited'
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
 

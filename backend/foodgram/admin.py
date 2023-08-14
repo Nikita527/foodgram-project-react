@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import register
 
-from .models import AmountIngredient, Carts, Favorites, Ingredient, Recipe, Tag
+from .models import AmountIngredient, Carts, Favorited, Ingredient, Recipe, Tag
 
 EMTY_MSG = '-пусто-'
 
@@ -86,8 +86,8 @@ class TagAdmin(admin.ModelAdmin):
     empty_value_display = EMTY_MSG
 
 
-@register(Favorites)
-class FavoritesAdmin(admin.ModelAdmin):
+@register(Favorited)
+class FavoritedAdmin(admin.ModelAdmin):
     """Класс избранных рецептов для админ панели."""
 
     list_display = (

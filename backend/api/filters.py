@@ -29,19 +29,19 @@ class RecipeFilter(filters.FilterSet):
         label='В корзине',
         method='filter_is_in_shopping_list'
     )
-    is_favorites = filters.BooleanFilter(
+    in_favorited = filters.BooleanFilter(
         label='В избранных',
-        method='filter_is_in_fovorites'
+        method='filter_is_in_fovorited'
     )
 
     class Meta:
         model = Recipe
         fields = ('author', 'tags',)
 
-    def filter_is_in_favorites(self, queryset, name, value):
+    def filter_is_in_favorited(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
-            return queryset.filter(in_favorites__user=user)
+            return queryset.filter(favorited__user=user)
         return queryset
 
     def filter_is_in_shopping_list(self, queryset, name, value):

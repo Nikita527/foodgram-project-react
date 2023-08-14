@@ -9,7 +9,7 @@ from django.db.models import Count, Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 
-from foodgram.models import (AmountIngredient, Carts, Favorites, Ingredient,
+from foodgram.models import (AmountIngredient, Carts, Favorited, Ingredient,
                              Recipe, Tag)
 from users.models import Follow, User
 
@@ -87,9 +87,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         if request.method == 'POST':
-            return self.add_to(Favorites, request.user, pk)
+            return self.add_to(Favorited, request.user, pk)
         else:
-            return self.delete_from(Favorites, request.user, pk)
+            return self.delete_from(Favorited, request.user, pk)
 
     @action(
         detail=True,
