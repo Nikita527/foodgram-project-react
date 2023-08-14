@@ -1,33 +1,7 @@
 import django_filters as filters
 
-from django.core.exceptions import ValidationError
-
-from foodgram.models import Ingredient, Recipe
+from foodgram.models import Ingredient, Recipe, Tag
 from users.models import User
-
-
-class TagsMultipleChoiceField(filters.fields.ModelMultipleChoiceField):
-    """Фильтер для выбора тегов."""
-
-    def validate(self, value):
-        if self.required and not value:
-            raise ValidationError(
-                self.error_messages['required'],
-                code='required'
-            )
-        for val in value:
-            if val in self.choices and not self.valid_value(val):
-                raise ValidationError(
-                    self.error_messages['invalid_choice'],
-                    code='invalid_choice',
-                    params={'value': val},
-                )
-
-
-class TagsFilter(filters.AllValuesMultipleFilter):
-    """Фильтр тэгов."""
-
-    field_class = TagsMultipleChoiceField
 
 
 class IngredientFilter(filters.FilterSet):
@@ -43,22 +17,35 @@ class IngredientFilter(filters.FilterSet):
 class RecipeFilter(filters.FilterSet):
     """Фильтр рецептов."""
 
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all()
+    )
     author = filters.ModelChoiceFilter(
         queryset=User.objects.all()
     )
-    shopping_list = filters.BooleanFilter(
-        widget=filters.widgets.BooleanWidget(),
-        label='В корзине'
+    is_in_shopping_list = filters.BooleanFilter(
+        label='В корзине',
+        method='filter_is_in_shopping_list'
     )
-    in_favorites = filters.BooleanFilter(
-        widget=filters.widgets.BooleanWidget(),
-        label='В избранных'
-    )
-    tags = filters.AllValuesMultipleFilter(
-        field_name='tags__slug',
-        label='Ссылка'
+    is_favorites = filters.BooleanFilter(
+        label='В избранных',
+        method='filter_is_in_fovorites'
     )
 
     class Meta:
         model = Recipe
-        fields = ['shopping_list', 'in_favorites', 'author', 'tags']
+        fields = ('author', 'tags',)
+
+    def filter_is_in_favorites(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(in_favorites__user=user)
+        return queryset
+
+    def filter_is_in_shopping_list(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(shopping_list__user=user)
+        return queryset

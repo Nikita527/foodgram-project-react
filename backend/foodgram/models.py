@@ -94,7 +94,8 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
-        through='AmountIngredient'
+        through='AmountIngredient',
+        related_name='recipes'
     )
     pub_date = models.DateField(
         'Дата публикации',
@@ -103,9 +104,9 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         'Изображение блюда',
-        upload_to='foodgram/media'
+        upload_to='foodgram/'
     )
-    description = models.TextField('Описание')
+    text = models.TextField('Описание')
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
         validators=[
@@ -153,7 +154,11 @@ class AmountIngredient(models.Model):
         ordering = ('recipe',)
 
     def __str__(self) -> str:
-        return f'{self.amount} {self.ingredient}'
+        return (
+            f'{self.ingredient.name} - '
+            f'{self.amount}'
+            f' {self.ingredient.measurement_unit}'
+        )
 
 
 class FavoriteShoppingCart(models.Model):

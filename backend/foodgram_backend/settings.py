@@ -13,6 +13,26 @@ DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+            'yourapp': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+        },
+    }
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,10 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
     'rest_framework',
+    'drf_extra_fields',
     'djoser',
     'django_filters',
-    'drf_yasg',
-    'colorfield',
     'foodgram.apps.FoodgramConfig',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',

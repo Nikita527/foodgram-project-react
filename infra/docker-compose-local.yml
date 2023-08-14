@@ -10,7 +10,10 @@ services:
       - ../.env
 
   backend:
-    image: nikitasalikov/foodgram_backend:latest
+    build:
+      context: ../backend/
+      dockerfile: Dockerfilelocal
+    container_name: foodgram_backend
     restart: on-failure
     volumes:
       - static_foodgram:/app/static/

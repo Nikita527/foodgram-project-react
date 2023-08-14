@@ -6,7 +6,7 @@ from .models import AmountIngredient, Carts, Favorites, Ingredient, Recipe, Tag
 EMTY_MSG = '-пусто-'
 
 
-class IngridientInLine(admin.TabularInline):
+class IngredientInLine(admin.TabularInline):
     """Класс для правильного отображения количества ингредиетов."""
 
     model = AmountIngredient
@@ -23,7 +23,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'cooking_time',
         'get_favorites',
-        'get_ingridients',
+        'get_ingredients',
         'pub_date',
     )
     search_fields = (
@@ -36,14 +36,14 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'tags',
     )
-    inlines = (IngridientInLine,)
+    inlines = (IngredientInLine,)
     empty_value_display = EMTY_MSG
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         qs = (
             qs.select_related('author')
-            .prefetch_related('tags__tag', 'ingredients__ingredient')
+            .prefetch_related('tags', 'ingredients')
         )
         return qs
 
@@ -51,16 +51,16 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.in_favorites.count()
     get_favorites.short_description = 'Избранное'
 
-    def get_ingridients(self, obj):
+    def get_ingredients(self, obj):
         return ', '.join([
-            ingridients.name for ingridients
-            in obj.ingridients.all()
+            ingredients.name for ingredients
+            in obj.ingredients.all()
         ])
-    get_ingridients.short_description = 'Ингридиеты'
+    get_ingredients.short_description = 'Ингридиеты'
 
 
 @register(Ingredient)
-class IngridientAdmin(admin.ModelAdmin):
+class IngredientAdmin(admin.ModelAdmin):
     """Класс ингридиетов для админ панели."""
 
     list_display = (
