@@ -14,6 +14,7 @@ from foodgram.models import (AmountIngredient, Carts, Favorited, Ingredient,
 from users.models import Follow, User
 
 from .filters import IngredientFilter, RecipeFilter
+from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrAdminOrReadOnly
 from .serializers import (CreateRecipeSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeShortSerializer,
@@ -29,7 +30,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filterset_class = IngredientFilter
     search_fields = ('^name',)
-    pagination_class = None
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -38,14 +38,14 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Создание/отображение рецептов."""
 
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.order_by('-pub_date')
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
+    pagination_class = CustomPagination
     filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
@@ -126,9 +126,7 @@ class UserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-    def get_queryset(self):
-        return User.objects.annotate(recipe_count=Count('recipes'))
+    pagination_class = CustomPagination
 
     @action(
         detail=True,
@@ -163,7 +161,8 @@ class UserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = User.objects.filter(following__user=user)
+        queryset = (User.objects.filter(following__user=user)
+                    .annotate(recipe_count=Count('recipes')))
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeListSerializer(
             pages, many=True, context={'request': request}

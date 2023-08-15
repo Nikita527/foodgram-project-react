@@ -7,6 +7,7 @@ from rest_framework.fields import SerializerMethodField
 
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 
 from foodgram.models import AmountIngredient, Ingredient, Recipe, Tag
@@ -84,13 +85,10 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор количества ингридиентов в блюде."""
 
     id = serializers.IntegerField(write_only=True)
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit')
 
     class Meta:
         model = AmountIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount',)
+        fields = ('id', 'amount',)
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
@@ -110,8 +108,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'name', 'image', 'text', 'cooking_time',)
 
     def get_ingredients(self, obj):
-        ingredients = AmountIngredient.objects.filter(recipe=obj)
-        return AmountIngredientSerializer(ingredients, many=True).data
+        recipe = obj
+        ingredients = recipe.ingredients.values(
+            'id',
+            'name',
+            'measurement_unit',
+            amount=F('ingredient__amount')
+        )
+        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
@@ -182,8 +186,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             ingredient_list.append(
                 AmountIngredient(
                     ingredient=Ingredient.objects.get(id=ingredient['id']),
-                    amount=ingredient.pop('amount'),
                     recipe=recipe,
+                    amount=ingredient['amount'],
                 )
             )
         AmountIngredient.objects.bulk_create(ingredient_list)
@@ -199,12 +203,18 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        instance.tags.clear()
-        AmountIngredient.objects.filter(recipe=instance).delete()
-        instance.tags.set(validated_data.pop('tags'))
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        self.create_ingredients(instance, ingredients)
-        return super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)
+        instance.tags.clear()
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        self.create_ingredients(
+            recipe=instance,
+            ingredients=ingredients
+        )
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         return RecipeReadSerializer(instance, context={
@@ -227,10 +237,11 @@ class SubscribeListSerializer(UserSerializer):
     """Сериализатор для получения подписок."""
 
     recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         fields = (
-            UserSerializer.Meta.fields + ('recipes',)
+            UserSerializer.Meta.fields + ('recipes', 'recipes_count')
         )
         read_only_fields = ('email', 'username', 'first_name', 'last_name',)
 
@@ -250,6 +261,9 @@ class SubscribeListSerializer(UserSerializer):
                 code=status.HTTP_400_BAD_REQUEST,
             )
         return data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
     def get_recipes(self, obj):
         request = self.context.get('request')

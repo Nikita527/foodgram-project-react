@@ -16,10 +16,6 @@ class MyUserAdmin(admin.ModelAdmin):
         'username',
         'email',
     )
-    list_filter = (
-        'first_name',
-        'email',
-    )
     ordering = ('username',)
     empty_value_display = '-пусто-'
     save_on_top = True
@@ -31,9 +27,9 @@ class FollowAdmin(admin.ModelAdmin):
         'user',
         'author',
     )
-    list_filter = (
-        'user',
-        'author',
+    search_fields = (
+        'username',
+        'email',
     )
     empty_value_display = '-пусто-'
 

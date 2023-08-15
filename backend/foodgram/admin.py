@@ -29,11 +29,9 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = (
         'name',
         'author',
-        'tags',
     )
     list_filter = (
         'author',
-        'name',
         'tags',
     )
     inlines = (IngredientInLine,)
@@ -68,7 +66,6 @@ class IngredientAdmin(admin.ModelAdmin):
         'measurement_unit',
     )
     search_fields = ('name',)
-    list_filter = ('name',)
     empty_value_display = EMTY_MSG
 
 
@@ -98,7 +95,7 @@ class FavoritedAdmin(admin.ModelAdmin):
         'user',
         'recipe',
     )
-    list_filter = ('user', 'recipe',)
+    list_filter = ('user',)
     empty_value_display = EMTY_MSG
 
     def get_queryset(self, request):
@@ -119,7 +116,7 @@ class CartAdmin(admin.ModelAdmin):
         'user',
         'recipe',
     )
-    list_filter = ('user', 'recipe',)
+    list_filter = ('user',)
     empty_value_display = EMTY_MSG
 
     def get_queryset(self, request):
