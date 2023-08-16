@@ -16,8 +16,7 @@ jobs:
       with:
         python-version: 3.9
         cache: 'pip'
-        cache-dependency-path: |
-          ~/.backend/requirements/
+        cache-dependency-path: requirements/requirement.lint.txt
     - name: Install lint requirements
       run: |
         python -m pip install --upgrade pip
