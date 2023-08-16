@@ -79,7 +79,6 @@ class TagAdmin(admin.ModelAdmin):
         'slug',
     )
     search_fields = ('name', 'slug',)
-    list_filter = ('name',)
     empty_value_display = EMTY_MSG
 
 
